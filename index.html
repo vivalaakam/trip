@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html>
     <head>
@@ -7,78 +6,85 @@
     </head>
     <body>
         <script type='text/javascript'>
-            var tickets = [
-                { from : 'Stockholm' , to : 'New York JFK' , type : 'flight' , number : 'SK22' , seat : '7B' , gate : '22' , baggage : 'auto'  },
-                { from : 'Madrid' , to : 'Barcelona' , type : 'train' , number : '78A' , seat : '45B' } , 
-                { from : 'New York JFK' , to : 'Chrysler Building' , type : 'taxi' , number : 'CRSLER' },
-                { from : 'Gerona Airport' , to : 'Stockholm' , type : 'flight' , number : 'SK455' , seat : '3A' , gate : '45B' , baggage : '344'} , 
-                { from : 'Barcelona' , to : 'Gerona Airport' , type : 'bus' } , 
-                
-            ]
+              var tickets = [
+                {from: 'Stockholm', to: 'New York JFK', type: 'flight', number: 'SK22', seat: '7B', gate: '22', baggage: 'auto'},
+                {from: 'Madrid', to: 'Barcelona', type: 'train', number: '78A', seat: '45B'},
+                {from: 'New York JFK', to: 'Chrysler Building', type: 'taxi', number: 'CRSLER'},
+                {from: 'Gerona Airport', to: 'Stockholm', type: 'flight', number: 'SK455', seat: '3A', gate: '45B', baggage: '344'},
+                {from: 'Barcelona', to: 'Gerona Airport', type: 'bus'}
+            ];
+
+            var start = 'Madrid', finish = 'Chrysler Building', tstart = start, curr, j, cont;
+
 
             /**
-             * string start название начального пункта
-             * string finish название конечной точки
-             * array route массив с тикетами
-             * array extend объект с новыми видами транспорта или изменение существующих
-             * 
-             * output массив с отсортированными даными, текст хранится в text
+             * @param string start название начального пункта
+             * @param string finish название конечной точки
+             * @param array route массив с тикетами
+             * @param object extend объект с новыми видами транспорта или изменение существующих
+             * @return array массив с отсортированными даными, текст хранится в text
              */
-            function calc_route( start , finish , route , extend )
+            function calc_route(start, finish, route, extend)
             {
                 var text = {
-                    get : function(  data )
+                    get: function(data)
                     {
-                        if(  this[data.type] != undefined )
+                        if (typeof this[data.type] !== 'undefined')
                         {
-                            return  this[data.type]( data );
+                            return  this[data.type](data);
                         }
                     },
-                    bus : function(data)
+                    bus: function(data)
                     {
-                        return 'Сядьте на автобус'+(data.number != undefined ? ' номер '+ data.number : '' )+', в '+data.from + ' и едьте до '+data.to+(data.seat? ' номер '+ data.seat : '' ) ;
+                        return 'Сядьте на автобус' + (data.number != undefined ? ' номер ' + data.number : '') + ', в ' + data.from + ' и едьте до ' + data.to + (data.seat ? ' номер ' + data.seat : '');
                     },
-                    train : function(data)
+                    train: function(data)
                     {
-                        return 'Сядьте на поезд'+(data.number != undefined  ? ' номер '+ data.number : '' )+', в '+data.from + ' и едьте до '+data.to+(data.seat? ' ваше место: '+ data.seat : '' ) ;
+                        return 'Сядьте на поезд' + (data.number != undefined ? ' номер ' + data.number : '') + ', в ' + data.from + ' и едьте до ' + data.to + (data.seat ? ' ваше место: ' + data.seat : '');
                     },
-                    flight : function( data )
+                    flight: function(data)
                     {
-                        return 'В аэропорту '+data.from + ' пройдите к воротам '+data.gate+' и сядьте на самолет '+data.number+' до '+data.to +', ваше место: '+data.number + ( data.baggage ? ( data.baggage == 'auto' ? ', ваш багаж доставят автоматически' : ', талон на багаж '+data.baggage ) : ''  ) ;
+                        return 'В аэропорту ' + data.from + ' пройдите к воротам ' + data.gate + ' и сядьте на самолет ' + data.number + ' до ' + data.to + ', ваше место: ' + data.number + (data.baggage ? (data.baggage == 'auto' ? ', ваш багаж доставят автоматически' : ', талон на багаж ' + data.baggage) : '');
                     }
-                };
-                if( extend != undefined )
+                }, tstart = start, curr, j, cont;
+                if (typeof extend !== 'undefined')
                 {
-                    for( key in extend)
+                    for (key in extend)
                     {
                         text[key] = extend[key];
                     }
                 }
-                for( var i = 0 ; i < route.length ; i++ )
-                {
-                    if( route[i].from == start )
-                    {
-                        route[i].text = text.get( route[i] );
-                        if( route[i].to != finish )
-                        {
-                            return [].concat(  route[i] , calc_route( route[i].to, finish , route , extend ) )
-                        }
-                        else
-                        {
-                            return [ route[i] ];
+
+                for (var i = 0, i_m = route.length; i < i_m; i++) {
+                    curr = route[i];
+                    if (curr.from !== tstart) {
+                        j = i + 1;
+                        cont = true;
+                        while (j < i_m && cont) {
+                            if (route[j].from === tstart) {
+                                route[i] = route[j];
+                                route[j] = curr;
+                                tstart = route[i].to
+                                cont = false;
+                            } else {
+                                j++;
+                            }
                         }
                     }
+                    route[i].text = text.get(route[i])
                 }
+                return route;
+
             }
 
-            var a = calc_route( 'Madrid' , 'Chrysler Building' , tickets , {
-                taxi : function(data) {
-                    return 'Вас будет дожидаться машина, номер '+ data.number +', которая довезет вас до '+data.to
+            var a = calc_route('Madrid', 'Chrysler Building', tickets, {
+                taxi: function(data) {
+                    return 'Вас будет дожидаться машина, номер ' + data.number + ', которая довезет вас до ' + data.to
                 }
             })
-            for( var i = 0 ; i < a.length ; i++ )
+            for (var i = 0; i < a.length; i++)
             {
-                document.write( a[i].text + '<br />' )
+                document.write(a[i].text + '<br />')
             }
         </script>
     </body>
